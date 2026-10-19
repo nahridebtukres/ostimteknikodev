@@ -1,48 +1,48 @@
-# DFD — Veri Akış Diyagramı
+# DFD — Ağ İzleme Ödev 1
 
-## Seviye 0 (Bağlam)
+## Seviye 0 (bağlam)
 
 ```mermaid
 flowchart LR
-    userActor[Kullanici_Terminal] --> processMain[Ag_Izleme_Programi]
-    osNet[Isletim_Sistemi_Ag_API] --> processMain
-    sshSvc[Localhost_SSH_Servisi] --> processMain
+    userActor[Kullanici_Terminal] --> processMain[ag_izleme.py]
+    osNet[Isletim_Sistemi_psutil_ping] --> processMain
+    sshSvc[LabSSH_127_0_0_1_2222] --> processMain
     processMain --> xlsxStore[(ssh_monitor_log.xlsx)]
     processMain --> userActor
 ```
 
-- Kullanıcı programı başlatır ve terminal özetini görür.
-- Program işletim sisteminden ağ/sistem metriklerini alır.
-- Program localhost SSH’a giriş denemesi gönderir / yanıt alır.
-- Sonuçlar XLSX veri deposuna yazılır (2 sayfa).
+- Kullanıcı programı çalıştırır; tur özetini terminalde görür.
+- Program işletim sisteminden arayüz, bağlantı, CPU, bellek ve ping alır.
+- Program lab SSH’a yanlış kimlik bilgisi gönderir; `AUTH_FAILED` döner.
+- Sonuç iki sayfalı XLSX’e yazılır.
 
-## Seviye 1 (Süreçler)
+## Seviye 1 (süreçler)
 
 ```mermaid
 flowchart TD
-    userActor[Kullanici] -->|baslat| p1[1_0_Dongu_Yonetimi]
+    userActor[Kullanici] -->|baslat| p1[1_0_Dongu]
     p1 --> p2[2_0_Metrik_Toplama]
-    osNet[OS_psutil_ping] --> p2
-    p2 --> p3[3_0_SSH_Denemesi]
-    sshSvc[SSH_22] --> p3
-    p3 --> p4[4_0_XLSX_Kayit]
+    osNet[OS] --> p2
+    p2 --> p3[3_0_SSH_Failed_Login]
+    sshSvc[LabSSH_2222] --> p3
+    p3 --> p1
+    p1 -->|turlar_bitti| p4[4_0_XLSX_Kayit]
     p2 --> p4
-    p4 --> xlsxStore[(XLSX)]
+    p3 --> p4
+    p4 --> xlsxStore[(ssh_monitor_log.xlsx)]
     p4 --> userActor
 ```
 
-### Süreç açıklamaları
-
 | No | Süreç | Girdi | Çıktı |
-|----|-------|-------|-------|
-| 1.0 | Döngü yönetimi | Tur sayısı, aralık | Ölçüm tetikleri |
-| 2.0 | Metrik toplama | OS sayaçları | 19 değişken (+ssh sonrası 20.) |
-| 3.0 | SSH denemesi | host/user/yanlış şifre | setup_time, failed_login, state |
-| 4.0 | XLSX kayıt | Birleşik satırlar | Ölçüm + Özet sayfaları |
+|----|--------|--------|--------|
+| 1.0 | Döngü | tur sayısı, aralık | ölçüm tetikleri |
+| 2.0 | Metrik toplama | OS sayaçları | arayüz, bağlantı, sistem değişkenleri |
+| 3.0 | SSH denemesi | host, user, yanlış şifre | state, setup_time, failed_login_count |
+| 4.0 | XLSX kayıt | birleşik satırlar | Sayfa1 ölçüm, Sayfa2 özet |
 
-## Veri akışları (kısa)
+## Veri akışları
 
-1. OS → Metrik toplama: bytes, packets, connections, CPU, memory, ping
-2. SSH servisi → SSH denemesi: auth/connect sonucu
-3. Metrik + SSH sonucu → XLSX: timestamp + 20 değişken + özet
-4. Program → Kullanıcı: tur özeti (state, fail, cpu, rate)
+1. OS → 2.0: bayt, paket, bağlantı, CPU, bellek, ping
+2. Lab SSH → 3.0: auth reddi
+3. 2.0 + 3.0 → 4.0: timestamp + 20 değişken
+4. 4.0 → kullanıcı: `ssh_monitor_log.xlsx` ve terminal satırı

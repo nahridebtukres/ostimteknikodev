@@ -1,52 +1,67 @@
-# ERD — Veri Modeli
+# ERD — Ağ İzleme Ödev 1
 
-Program veritabanı kullanmaz; kalıcı depolama tek XLSX dosyasıdır (ölçüm + özet sayfaları). ERD, bu mantıksal modeli gösterir.
+Veritabanı yoktur. Kalıcı depolama `ssh_monitor_log.xlsx` dosyasıdır.
 
-## Varlıklar
+- Sayfa `ssh_monitor_log`: her tur bir ölçüm satırı
+- Sayfa `Ozet`: ilk–son farkı, yön (ARTIS/AZALIS/SABIT), anlam
 
-### Measurement (ölçüm kaydı)
+## Varlık: Measurement
 
-Her döngü turunda bir satır üretilir.
+Timestamp + 20 izleme değişkeni.
 
 | Alan | Tip | Açıklama |
 |------|-----|----------|
-| timestamp | datetime/string | Birincil zaman anahtarı (satır kimliği ile birlikte) |
+| timestamp | string | Ölçüm zamanı |
 | interface_name | string | Ağ arayüzü |
 | local_ip | string | Yerel IP |
-| remote_ip | string | SSH hedef IP |
-| remote_port | integer | SSH port (22) |
+| remote_ip | string | 127.0.0.1 |
+| remote_port | integer | 2222 |
 | local_port | integer | İstemci portu |
-| transport_protocol | string | TCP/UDP |
-| connection_state | string | AUTH_FAILED / CONNECT_FAILED / ... |
-| active_connection_count | integer | Etkin bağlantı sayısı |
-| listening_port_count | integer | Dinleyen port sayısı |
+| transport_protocol | string | TCP |
+| connection_state | string | AUTH_FAILED / CONNECT_FAILED |
+| active_connection_count | integer | Etkin bağlantı |
+| listening_port_count | integer | Dinleyen port |
 | bytes_received | integer | Alınan bayt |
 | bytes_sent | integer | Gönderilen bayt |
 | packets_received | integer | Alınan paket |
 | packets_sent | integer | Gönderilen paket |
-| incoming_traffic_rate | float | Gelen hız (B/s) |
-| outgoing_traffic_rate | float | Giden hız (B/s) |
-| ping_latency | float | Gecikme (ms) |
-| connection_setup_time | float | SSH deneme süresi (ms) |
+| incoming_traffic_rate | float | Gelen B/s |
+| outgoing_traffic_rate | float | Giden B/s |
+| ping_latency | float | ms |
+| connection_setup_time | float | SSH deneme ms |
 | cpu_utilization | float | CPU % |
-| memory_usage | float | Bellek MB |
+| memory_usage | float | MB |
 | failed_login_count | integer | Kümülatif başarısız giriş |
 
-### TargetConfig (yapılandırma — kod içi)
+## Varlık: SummaryRow
 
 | Alan | Tip | Açıklama |
 |------|-----|----------|
-| ssh_host | string | 127.0.0.1 |
-| ssh_port | integer | 22 |
-| ssh_user | string | labuser |
-| interval | integer | ölçüm aralığı (sn) |
-| max_rounds | integer | tur sayısı |
+| metrik | string | Değişken adı |
+| ilk | float | İlk tur |
+| son | float | Son tur |
+| fark | float | Mutlak fark |
+| yon | string | ARTIS / AZALIS / SABIT |
+| anlam | string | Atak izi açıklaması |
 
-## İlişki diyagramı
+## Varlık: TargetConfig (kod sabitleri)
+
+20 değişkene dahil değildir.
+
+| Alan | Değer |
+|------|--------|
+| ssh_host | 127.0.0.1 |
+| ssh_port | 2222 |
+| ssh_user | labuser |
+| interval | 2 sn |
+| max_rounds | 10 |
+
+## İlişki
 
 ```mermaid
 erDiagram
-    TargetConfig ||--o{ Measurement : generates
+    TargetConfig ||--o{ Measurement : uretir
+    Measurement ||--o{ SummaryRow : ozetlenir
     TargetConfig {
         string ssh_host
         int ssh_port
@@ -56,30 +71,18 @@ erDiagram
     }
     Measurement {
         string timestamp
-        string interface_name
-        string local_ip
-        string remote_ip
-        int remote_port
-        int local_port
-        string transport_protocol
         string connection_state
-        int active_connection_count
-        int listening_port_count
-        int bytes_received
-        int bytes_sent
-        int packets_received
-        int packets_sent
-        float incoming_traffic_rate
-        float outgoing_traffic_rate
-        float ping_latency
-        float connection_setup_time
-        float cpu_utilization
-        float memory_usage
         int failed_login_count
+        float incoming_traffic_rate
+        float cpu_utilization
+    }
+    SummaryRow {
+        string metrik
+        float ilk
+        float son
+        string yon
     }
 ```
 
-## Anahtarlar
-
-- Mantıksal PK: (`timestamp`, tur sırası / satır numarası)
-- FK benzeri bağ: her `Measurement.remote_ip/remote_port` → `TargetConfig.ssh_host/ssh_port`
+Mantıksal anahtar: ölçüm satırı için `timestamp` + tur sırası.  
+`Measurement.remote_ip` / `remote_port` yapılandırmadaki host/port ile aynıdır.

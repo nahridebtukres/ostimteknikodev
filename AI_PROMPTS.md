@@ -1,6 +1,7 @@
-# Yapay Zeka Prompt Arşivi
+# Yapay Zeka Prompt Arşivi — Ağ İzleme Ödev 1
 
-Ödev kuralı gereği program tek seferde istenmemiştir. Aşağıdaki promptlar aşamalı kullanılmıştır. Aynı metinler `ag_izleme.py` dosyasının sonunda da yer alır.
+Ödev kuralı: program tek istekte üretilmez. Aşağıdaki promptlar aşamalı kullanılmıştır.  
+Vize teslimi gereği yapay zeka kaynaklı kod parçaları ve promptlar saklanır.
 
 ## Prompt-1 — Değişken seçimi (AI-1)
 
@@ -10,11 +11,11 @@ SSH üzerinde izlemek için ders listesinden timestamp hariç tam 20 ağ/sistem
 değişkeni öner. Her değişkenin atağı nasıl açıkladığını kısa yaz.
 ```
 
-**Özet sonuç:** interface_name, local_ip, remote_ip, remote_port, local_port,
-transport_protocol, connection_state, active_connection_count,
-listening_port_count, bytes_received, bytes_sent, packets_received,
-packets_sent, incoming_traffic_rate, outgoing_traffic_rate, ping_latency,
-connection_setup_time, cpu_utilization, memory_usage, failed_login_count.
+Sonuç: `interface_name`, `local_ip`, `remote_ip`, `remote_port`, `local_port`,
+`transport_protocol`, `connection_state`, `active_connection_count`,
+`listening_port_count`, `bytes_received`, `bytes_sent`, `packets_received`,
+`packets_sent`, `incoming_traffic_rate`, `outgoing_traffic_rate`, `ping_latency`,
+`connection_setup_time`, `cpu_utilization`, `memory_usage`, `failed_login_count`.
 
 ## Prompt-2 — Değişken doğrulama (AI-2)
 
@@ -28,8 +29,8 @@ packets_sent, incoming_traffic_rate, outgoing_traffic_rate, ping_latency,
 connection_setup_time, cpu_utilization, memory_usage, failed_login_count
 ```
 
-**Özet sonuç:** Set yeterli; failed_login_count ve connection_setup_time saldırı
-izini doğrudan taşır; trafik ve bağlantı sayaçları tekrarlı denemeleri gösterir.
+Sonuç: set yeterli. `failed_login_count` ve `connection_state` auth reddini;
+bağlantı sayısı ve trafik hızları tekrarlı denemeyi gösterir.
 
 ## Prompt-3 — Fonksiyon sayısı (AI-1)
 
@@ -38,34 +39,34 @@ Tek Python dosyasında, 200-250 satır kod sınırıyla localhost SSH failed-log
 izleme programını kaç ayrı fonksiyonda yazmalıyım? Görevleri listele.
 ```
 
-**Özet sonuç:** 7 ana fonksiyon önerildi (timestamp, arayüz, bağlantı, sistem,
-SSH denemesi, Excel export, main).
+Sonuç: timestamp, arayüz, bağlantı, sistem, lab SSH, giriş denemesi, XLSX, main.
 
 ## Prompt-4 — Fonksiyon uygunluğu (AI-2)
 
 ```
-Şu 7 fonksiyon uygun mu: get_timestamp, collect_interface_metrics,
-collect_connection_metrics, collect_system_metrics, attempt_ssh_login,
-export_xlsx, main? Eksik/fazla varsa söyle.
+Şu fonksiyonlar uygun mu: get_timestamp, collect_interface_metrics,
+collect_connection_metrics, collect_system_metrics, start_lab_ssh,
+attempt_ssh_login, export_xlsx, main? Eksik/fazla varsa söyle.
 ```
 
-**Özet sonuç:** Uygun; küçük yardımcı fonksiyonlar satır bütçesi içinde kabul edilebilir.
+Sonuç: uygun. `LabSSH` sınıfı lab kimlik doğrulaması içindir.
 
-## Prompt-5 — Parça kod (arayüz metrikleri)
+## Prompt-5 — Parça kod (arayüz)
 
 ```
 Sadece collect_interface_metrics yaz: psutil ile arayüz adı, local IP,
 bytes/packets ve önceki örneğe göre trafik hızı döndür.
 ```
 
-## Prompt-6 — Parça kod (bağlantı metrikleri)
+## Prompt-6 — Parça kod (bağlantı)
 
 ```
 Sadece collect_connection_metrics yaz: remote_ip/port, local_port, TCP,
 connection_state, active_connection_count, listening_port_count.
+Hedef port 2222 olsun.
 ```
 
-## Prompt-7 — Parça kod (sistem metrikleri)
+## Prompt-7 — Parça kod (sistem)
 
 ```
 Sadece collect_system_metrics yaz: CPU %, süreç bellek MB, localhost ping ms.
@@ -79,8 +80,9 @@ Sadece attempt_ssh_login yaz: paramiko ile 127.0.0.1:2222 yanlış şifre,
 connection_setup_time ve failed_login_count döndür; servis yoksa çökmesin.
 ```
 
-## Prompt-9 — Parça kod (Excel ve main)
+## Prompt-9 — Parça kod (kayıt ve main)
 
 ```
-export_xlsx ve main yaz: 21 kolonlu XLSX, 2 sayfa (olcum+ozet), 10 tur, terminal ozet.
+export_xlsx ve main yaz: 21 kolonlu XLSX, 2 sayfa (olcum + ozet),
+10 tur, 2 saniye aralık, terminal özet. GUI yok.
 ```

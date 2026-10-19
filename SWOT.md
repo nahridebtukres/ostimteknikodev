@@ -1,31 +1,32 @@
-# SWOT Analizi — SSH Localhost Ağ İzleme
+# SWOT — Ağ İzleme Ödev 1
 
-## Strengths (Güçlü Yanlar)
+Konu: Python ile localhost SSH failed-login / tekrarlı bağlantı izleme.
 
-- Tek dosyada çalışan, anlaşılır ve teslimi kolay yapı
-- Timestamp + 20 değişken ile düzenli XLSX çıktısı (ölçüm + özet sayfası)
-- Failed-login ve tekrarlı bağlantı saldırı izlerine doğrudan bağlı metrikler
-- Windows 11 ve Linux (Ubuntu/Pardus) için ortak `psutil` / `paramiko` kullanımı
-- Proje içi lab SSH (`127.0.0.1:2222`, `lab_auth/`) sistem ayarı gerektirmez
-- SSH reddi `AUTH_FAILED` olarak kaydedilir; servis hatasında program çökmez
+## Strengths (Güçlü yanlar)
 
-## Weaknesses (Zayıf Yanlar)
+- Tek Python dosyası, terminal arayüzü; GUI yok (ödev tercihi)
+- Timestamp + 20 değişken anlamlı kullanılıyor
+- Atak izi doğrudan görünür: `AUTH_FAILED`, `failed_login_count`, trafik ve bağlantı sayısı
+- Proje içi lab SSH (2222) sistem ayarı istemez; Windows / Ubuntu / Pardus ortak kütüphanelerle çalışır
+- Sonuç Excel’de iki sayfada durur: ham ölçüm ve ARTIS/AZALIS özeti
 
-- Kod satırı sınırı (200–250) nedeniyle gelişmiş analiz/filtreleme yok
-- GUI ve veritabanı kullanılmıyor; görselleştirme sonradan yapılmalı
-- Localhost senaryosu gerçek uzak ağ gürültüsünü tam yansıtmaz
-- `net_connections` bazı ortamlarda yetki ister; kısmi veri gelebilir
+## Weaknesses (Zayıf yanlar)
+
+- 200–250 satır sınırı gelişmiş grafik/filtrelemeyi engeller
+- Ölçüm localhost lab ortamındadır; gerçek WAN gürültüsünü taşımaz
+- `psutil.net_connections` bazı hesaplarda yetki ister; kısmi veri gelebilir
+- XLSX Excel’de açıkken üzerine yazılamaz
 
 ## Opportunities (Fırsatlar)
 
-- XLSX çıktısı Excel ile doğrudan analiz edilebilir
-- Aynı iskelet farklı saldırı senaryolarına (port tarama, trafik anomalisi) uyarlanabilir
-- Ders dokümanları (BPMN, DFD, ERD) ile süreç net anlatılabilir
-- Laboratuvarda OpenSSH açılarak daha zengin auth log izi elde edilebilir
+- Aynı iskelet port tarama veya trafik anomalisi senaryosuna taşınabilir
+- XLSX çıktısı derste gösterilen tablo analizine uygundur
+- SWOT / BPMN / DFD / ERD ile süreç sınavda anlatılabilir
+- Tur sayısı ve aralık sabitlerden kolayca değiştirilebilir
 
 ## Threats (Tehditler)
 
-- OpenSSH kurulu/aktif değilse çoğu deneme `CONNECT_FAILED` olur
-- Python veya paket sürüm farkları kurulum hatasına yol açabilir
-- Yanlışlıkla gerçek/üretim SSH hedefine yöneltilirse güvenlik riski oluşur
-- Yetkisiz ortamda tekrarlı giriş denemeleri politika ihlali sayılabilir (yalnız lab)
+- `psutil` / `paramiko` / `openpyxl` kurulmazsa program başlamaz
+- 2222 portu başka süreç tarafından tutulursa lab SSH açılamaz
+- Yanlışlıkla gerçek/uzak SSH hedefine çevrilirse politika ihlali oluşur
+- Python sürüm farkı (lab 3.15, geliştirme 3.12) paket kurulumunu etkileyebilir
