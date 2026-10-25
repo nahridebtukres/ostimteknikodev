@@ -1,125 +1,90 @@
-# Çalışma Planı — Ağ İzleme Ödev 1
+# Çalışma Planı — Ağ İzleme Ödev 1 / Vize
 
-Ders: Ağ İzleme  
-Ödev: Python Tabanlı Ağ İzleme  
-Öğrenci: 250401041 — Bedirhan Serkut Yöntem  
-Program: `ag_izleme.py` (tek dosya, terminal)
+**Öğrenci:** Bedirhan Serkut Yöntem — 250401041  
+**Program:** `ag_izleme.py` (tek dosya, terminal, GUI yok)
 
-## Amaç
+## Seçilen ataklar (mail listesinden)
 
-Program, proje içi lab SSH hedefine (`127.0.0.1:2222`) bilinçli yanlış şifre ile bağlanmayı dener. Bu sırada timestamp hariç 20 ağ/sistem değişkenini toplar ve sonucu `ssh_monitor_log.xlsx` dosyasına kaydeder.
+| Atak | Labda ne yapılıyor | Gözlenen iz |
+|------|-------------------|-------------|
+| Failed-login simulation | `labuser` + yanlış parola → SSH | `AUTH_FAILED`, `failed_login_count` |
+| Repeated connection attempts | 10 tur, 2 sn aralık | tur sayısı, trafik hızı, `active_connection_count` |
+| Unauthorized-access attempt | yetkisiz kimlik → reddedilme | `connection_state=AUTH_FAILED` |
 
-İzlenen saldırı izleri (ödev mailindeki atak listesi):
+## 20 değişken (timestamp hariç) ve nedeni
 
-- Failed-login simulation
-- Repeated connection attempts
-- Unauthorized-access attempt (auth reddi)
+| # | Değişken | Ders listesi grubu | Atak ilişkisi |
+|---|----------|-------------------|---------------|
+| 1 | interface_name | A arayüz | Trafiğin geçtiği arayüz |
+| 2 | local_ip | C yerel IP | Deneme kaynağı |
+| 3 | remote_ip | C uzak IP | Lab SSH hedefi |
+| 4 | remote_port | C uzak port | 2222 |
+| 5 | local_port | C yerel port | İstemci ephemeral port |
+| 6 | transport_protocol | C protokol | SSH → TCP |
+| 7 | connection_state | C durum | AUTH_FAILED / TCP state |
+| 8 | active_connection_count | C etkin sayı | Tekrarlı deneme yoğunluğu |
+| 9 | listening_port_count | C dinleyen | Lab servis görünürlüğü |
+| 10 | bytes_received | A/C bayt | Gelen hacim |
+| 11 | bytes_sent | A/C bayt | Giden hacim (SSH denemeleri) |
+| 12 | packets_received | A paket | Gelen paket |
+| 13 | packets_sent | A paket | Giden paket |
+| 14 | incoming_traffic_rate | C trafik hızı | Gelen B/s |
+| 15 | outgoing_traffic_rate | C trafik hızı | Giden B/s (atak anı) |
+| 16 | ping_latency | B ping | Hedefe gecikme |
+| 17 | connection_setup_time | B kurulum süresi | SSH deneme süresi (ms) |
+| 18 | cpu_utilization | D CPU | İzleme yükü |
+| 19 | memory_usage | D bellek | Süreç MB |
+| 20 | failed_login_count | atak sayacı | Kümülatif başarısız giriş |
 
-Sistem OpenSSH ayarına dokunulmaz. Lab sunucusu programla birlikte `lab_auth/` dizininde ayağa kalkar.
+## Modlar
 
-## Kilitlelen kararlar
+| Mod | Ne yapar | `failed_login_count` |
+|-----|----------|----------------------|
+| `--run` | Lab SSH açar, 10 tur yanlış parola dener, CSV yazar | Her turda artar (1…10) |
+| `--monitor` | Atak yapmaz; 20 değişkeni canlı basar, Ctrl+C → CSV | Yan yana `--run` varsa `lab_auth/attack_status.txt` üzerinden okur ve artar; yalnız monitor’da 0 |
 
-| Konu | Karar |
-|------|--------|
-| Dil / arayüz | Python, GUI yok, terminal |
-| Hedef | `127.0.0.1:2222` |
-| Kimlik | kullanıcı `labuser`, istemci şifresi kasıtlı yanlış |
-| Beklenen durum | `AUTH_FAILED` |
-| Kayıt | `ssh_monitor_log.xlsx` (Sayfa1: ölçüm, Sayfa2: özet) |
-| Kod uzunluğu | ~200–250 satır (yorum hariç) |
-| Prompt arşivi | `AI_PROMPTS.md` |
-| Platform | Windows 11, Ubuntu, Pardus |
-
-## 20 değişken (timestamp hariç)
-
-Timestamp her satırda ayrıca tutulur; aşağıdaki 20 değişken atak izini açıklamak için seçilmiştir.
-
-| # | Değişken | Neden seçildi |
-|---|----------|----------------|
-| 1 | interface_name | Trafiğin geçtiği arayüz |
-| 2 | local_ip | Denemelerin kaynak IP’si |
-| 3 | remote_ip | SSH hedefi (127.0.0.1) |
-| 4 | remote_port | Hedef port (2222) |
-| 5 | local_port | İstemci geçici portu |
-| 6 | transport_protocol | SSH taşıması (TCP) |
-| 7 | connection_state | AUTH_FAILED / CONNECT_FAILED |
-| 8 | active_connection_count | Tekrarlı TCP yoğunluğu |
-| 9 | listening_port_count | Dinleyen servis sayısı |
-| 10 | bytes_received | Gelen bayt |
-| 11 | bytes_sent | Giden bayt |
-| 12 | packets_received | Gelen paket |
-| 13 | packets_sent | Giden paket |
-| 14 | incoming_traffic_rate | Gelen hız (B/s) |
-| 15 | outgoing_traffic_rate | Giden hız (B/s) |
-| 16 | ping_latency | Hedefe gecikme (ms) |
-| 17 | connection_setup_time | SSH deneme süresi (ms) |
-| 18 | cpu_utilization | CPU (%) |
-| 19 | memory_usage | İzleme süreci belleği (MB) |
-| 20 | failed_login_count | Kümülatif başarısız giriş |
+Paylaşılan durum dosyası: `lab_auth/attack_status.txt` (`fail|state|setup_ms`). `--run` yazar, `--monitor` okur.
 
 ## Toplama ve kayıt sırası
 
-1. `get_timestamp()`
-2. `collect_interface_metrics()`
-3. `collect_connection_metrics()`
-4. `collect_system_metrics()`
-5. `attempt_ssh_login()`
-6. Tur kaldıysa `sleep(INTERVAL)`
-7. Turlar bitince `export_xlsx()`
+1. `ensure_deps` → paket  
+2. `ensure_csv` → dosya yoksa başlık  
+3. `--run`: `write_attack_status(0,…)` sıfırla → `start_lab_ssh`  
+4. `timestamp`  
+5. `collect_interface_metrics`  
+6. `collect_connection_metrics`  
+7. `collect_system_metrics`  
+8. `--run`: `attempt_ssh_login` → `write_attack_status`  
+9. `--monitor`: `read_attack_status` (yan yana atak izi)  
+10. Bellekte satır biriktir; `INTERVAL` (2 sn) bekle  
+11. `export_csv` → `ssh_monitor_log.csv`
 
-## Fonksiyonlar
+## Saklama yöntemi
 
-| Fonksiyon | Görev |
-|-----------|--------|
-| `get_timestamp` | Zaman damgası |
-| `collect_interface_metrics` | Arayüz, bayt/paket, trafik hızı |
-| `collect_connection_metrics` | IP/port/protokol/durum/sayaçlar |
-| `collect_system_metrics` | CPU, bellek, ping |
-| `start_lab_ssh` | Proje içi 2222 lab SSH |
-| `attempt_ssh_login` | Yanlış şifre denemesi |
-| `export_xlsx` | Ölçüm + özet sayfaları |
-| `main` | Döngü ve hata yönetimi |
+- Format: CSV (stdlib `csv`), dosya: `ssh_monitor_log.csv`  
+- Yan süreç paylaşımı: `lab_auth/attack_status.txt`  
+- Veritabanı yok (ERD’de tek varlık: Measurement)  
+- GUI yok; terminal: `--run` / `--monitor`
 
-`LabSSH` sınıfı lab sunucusunun kimlik doğrulamasını yapar; 20 izleme değişkenine dahil değildir.
+## Dokümantasyon (derste zorunlu)
 
-## Teslim dosyaları
+| Dosya | İçerik |
+|-------|--------|
+| `SWOT.md` / `SWOT.docx` | Güçlü / zayıf / fırsat / tehdit |
+| `BPMN.md` / `BPMN.docx` | İş süreci |
+| `DFD.md` / `DFD.docx` | Veri akışı |
+| `ERD.md` / `ERD.docx` | Kayıt şeması |
+| `ag_izleme.py` sonu | Aşamalı YZ prompt arşivi |
 
-- `ag_izleme.py`
-- `requirements.txt` (`psutil`, `paramiko`, `openpyxl`)
-- `CALISMA_PLANI.md`, `AI_PROMPTS.md`
-- `SWOT.md`, `BPMN.md`, `DFD.md`, `ERD.md`
-- Çalışınca üretilir: `ssh_monitor_log.xlsx`
-- Çalışınca oluşur (teslimde gizlenebilir): `lab_auth/`
-
-## Çalıştırma
-
-Windows 11:
+## Çalıştırma (Win / Ubuntu / Pardus — Python 3.15)
 
 ```text
-pip install -r requirements.txt
-python ag_izleme.py
+python3 ag_izleme.py --run
+python3 ag_izleme.py --monitor
 ```
 
-Ubuntu / Pardus:
+Yan yana demo: bir terminalde `--monitor`, diğerinde `--run` — monitor panelinde `failed_login_count` atakla birlikte artar.
 
-```text
-pip3 install -r requirements.txt
-python3 ag_izleme.py
-```
+## Kod sınırı
 
-Excel dosyası açıksa program yazamaz; kapatıp yeniden çalıştırın.
-
-## Teslim checklist
-
-1. Timestamp hariç 20 değişken kodda ve XLSX’te var mı?
-2. Program failed-login / tekrarlı bağlantı izini topluyor mu?
-3. Kod tek dosyada mı ve ~200–250 satır sınırında mı?
-4. Promptlar aşamalı belgelenmiş mi (`AI_PROMPTS.md`)?
-5. Program Windows’ta çalışıyor mu; Linux ping bayrağı ayrılmış mı?
-
-## Sınav omurgası
-
-- Değişkenler atak izine göre seçildi; doğrulama Prompt-2 ile yapıldı.
-- Sıra: timestamp → arayüz → bağlantı → sistem → SSH → XLSX.
-- Kayıt: `openpyxl`, iki sayfa.
-- Bileşenler `main` içinde sırayla çalışır; lab SSH sistem servisine ihtiyaç duymaz.
+Yorum hariç ~200–250 satır. Prompt ve `#` yorumları sınır dışı.
